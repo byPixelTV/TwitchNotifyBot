@@ -55,47 +55,22 @@ object MessageUpdateService {
                                     if (mainCollectionEntry != null) {
                                         val channel = TwitchNotifyBot.shardManager.getTextChannelById(entry.channelId)
                                         if (channel != null) {
-                                            val pingRoleId = mainCollectionEntry.mentionRole
-                                            val mention = if (pingRoleId != null) {
-                                                channel.guild.getRoleById(pingRoleId)
-                                            } else {
-                                                null
-                                            }
-                                            if (mention == null) {
-                                                val newMessage = channel.sendMessageEmbeds(embed).await()
-                                                TwitchNotifyBot.mongoClient.getDatabase("twitch_notify")
-                                                    .getCollection<LiveNotifyEntry>("twitch_notify_live_entries")
-                                                    .replaceOne(
-                                                        eq("messageId", entry.messageId),
-                                                        LiveNotifyEntry(
-                                                            newMessage.id,
-                                                            entry.guildId,
-                                                            entry.channelId,
-                                                            entry.twitchChannelId,
-                                                            entry.streamId,
-                                                            entry.startTime,
-                                                            entry.linkedNotifyId
-                                                        ),
-                                                        ReplaceOptions().upsert(false)
-                                                    )
-                                            } else {
-                                                val newMessage = channel.sendMessage(mention.asMention).setEmbeds(embed).await()
-                                                TwitchNotifyBot.mongoClient.getDatabase("twitch_notify")
-                                                    .getCollection<LiveNotifyEntry>("twitch_notify_live_entries")
-                                                    .replaceOne(
-                                                        eq("messageId", entry.messageId),
-                                                        LiveNotifyEntry(
-                                                            newMessage.id,
-                                                            entry.guildId,
-                                                            entry.channelId,
-                                                            entry.twitchChannelId,
-                                                            entry.streamId,
-                                                            entry.startTime,
-                                                            entry.linkedNotifyId
-                                                        ),
-                                                        ReplaceOptions().upsert(false)
-                                                    )
-                                            }
+                                            val newMessage = channel.sendMessageEmbeds(embed).await()
+                                            TwitchNotifyBot.mongoClient.getDatabase("twitch_notify")
+                                                .getCollection<LiveNotifyEntry>("twitch_notify_live_entries")
+                                                .replaceOne(
+                                                    eq("messageId", entry.messageId),
+                                                    LiveNotifyEntry(
+                                                        newMessage.id,
+                                                        entry.guildId,
+                                                        entry.channelId,
+                                                        entry.twitchChannelId,
+                                                        entry.streamId,
+                                                        entry.startTime,
+                                                        entry.linkedNotifyId
+                                                    ),
+                                                    ReplaceOptions().upsert(false)
+                                                )
                                         }
                                     }
                                 }
