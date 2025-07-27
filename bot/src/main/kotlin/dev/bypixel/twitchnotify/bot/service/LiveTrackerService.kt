@@ -22,6 +22,10 @@ object LiveTrackerService {
         }
     }
 
+    init {
+        job.start()
+    }
+
     private suspend fun trackNewLiveStreams() {
         val currentLiveStreams = TwitchNotifyBot.mongoClient.getDatabase("twitch_notify")
             .getCollection<LiveNotifyEntry>("twitch_notify_live_entries")

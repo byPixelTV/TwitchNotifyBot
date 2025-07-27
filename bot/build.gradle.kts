@@ -41,6 +41,7 @@ dependencies {
     implementation(libs.bot.commands)
     implementation(libs.jda) {
         exclude(module = "opus-java")
+        exclude(module = "tink")
     }
     implementation(libs.stacktrace.decoroutinator)
     implementation(libs.pagination)

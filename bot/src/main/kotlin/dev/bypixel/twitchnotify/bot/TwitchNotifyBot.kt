@@ -7,13 +7,24 @@ import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import dev.bypixel.twitchnotify.bot.presence.Update
+import dev.bypixel.twitchnotify.bot.service.CacheValidateService
 import dev.bypixel.twitchnotify.bot.service.LiveTrackerService
 import dev.bypixel.twitchnotify.bot.service.MessageUpdateService
+import dev.bypixel.twitchnotify.bot.util.TwitchUtil
 import dev.bypixel.twitchnotify.shared.jedisWrapper.RedisController
 import dev.bypixel.twitchnotify.shared.jedisWrapper.pubsub.PubSubListener
+import dev.bypixel.twitchnotify.shared.models.TwitchNameCache
+import dev.bypixel.twitchnotify.shared.models.TwitchNotifyEntry
 import dev.reformator.stacktracedecoroutinator.jvm.DecoroutinatorJvmApi
 import io.github.cdimascio.dotenv.dotenv
 import io.github.freya022.botcommands.api.core.BotCommands
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.events.session.ShutdownEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
@@ -26,7 +37,7 @@ import java.util.concurrent.TimeUnit
 
 
 class TwitchNotifyBot : ListenerAdapter() {
-    // val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     companion object {
         lateinit var shardManager: ShardManager
@@ -119,6 +130,8 @@ class TwitchNotifyBot : ListenerAdapter() {
                 .shouldEventLock(true)
                 .shouldRemoveOnReact(true)
                 .activate()
+
+            CacheValidateService
         }
     }
 
@@ -133,6 +146,7 @@ class TwitchNotifyBot : ListenerAdapter() {
         val client: OkHttpClient = event.jda.httpClient
         client.connectionPool.evictAll()
         client.dispatcher.executorService.shutdown()
+        coroutineScope.cancel()
 
         redisController.shutdown()
         logger.info("✅ TwitchNotifyBot has been shut down successfully.")

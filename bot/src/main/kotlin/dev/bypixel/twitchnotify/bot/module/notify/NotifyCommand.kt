@@ -12,6 +12,7 @@ import dev.bypixel.twitchnotify.bot.util.TwitchUtil
 import dev.bypixel.twitchnotify.bot.util.enum.Constants
 import dev.bypixel.twitchnotify.bot.util.enum.Emotes
 import dev.bypixel.twitchnotify.shared.models.LiveNotifyEntry
+import dev.bypixel.twitchnotify.shared.models.TwitchNameCache
 import dev.bypixel.twitchnotify.shared.models.TwitchNotifyEntry
 import dev.minn.jda.ktx.coroutines.await
 import io.github.freya022.botcommands.api.commands.annotations.Command
@@ -20,7 +21,6 @@ import io.github.freya022.botcommands.api.commands.application.provider.GlobalAp
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import kotlinx.coroutines.flow.toList
 import net.dv8tion.jda.api.EmbedBuilder
-import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildMessageChannel
@@ -97,6 +97,13 @@ object NotifyCommand : GlobalApplicationCommandProvider {
                 .setThumbnail(user.profileImageUrl)
                 .build()
             event.replyEmbeds(embed).setEphemeral(true).await()
+
+            TwitchNotifyBot.mongoClient.getDatabase("twitch_notify").getCollection<TwitchNameCache>("twitch_name_cache")
+                .replaceOne(
+                    eq("twitchChannelId", twitchChannelId),
+                    TwitchNameCache(twitchChannelId, user.displayName),
+                    com.mongodb.client.model.ReplaceOptions().upsert(true)
+                )
 
             // check if the channel is currently live
             val userStreamResults = twitchClient.helix.getStreams(null, null, null, null, null, null, listOf(twitchChannelId), null)
@@ -179,6 +186,7 @@ object NotifyCommand : GlobalApplicationCommandProvider {
         twitchUserName: String,
         channel: StandardGuildMessageChannel? = null
     ) {
+        event.interaction.deferReply(true).await()
         val channel = channel ?: event.channel as StandardGuildMessageChannel
         val notifyEntries = TwitchNotifyBot.mongoClient.getDatabase("twitch_notify")
             .getCollection<TwitchNotifyEntry>("twitch_notify_entries")
@@ -198,7 +206,7 @@ object NotifyCommand : GlobalApplicationCommandProvider {
                 .setAuthor(event.user.effectiveName, null, DiscordUtil.getAvatarOrDefault(event.user))
                 .setFooter(event.jda.selfUser.name, DiscordUtil.getAvatarOrDefault(event.jda.selfUser))
                 .build()
-            event.replyEmbeds(embed).setEphemeral(true).await()
+            event.hook.sendMessageEmbeds(embed).setEphemeral(true).await()
             return
         } else {
             val notifyEntry = notifyEntries.first { entry ->
@@ -233,11 +241,12 @@ object NotifyCommand : GlobalApplicationCommandProvider {
                 .setAuthor(event.user.effectiveName, null, DiscordUtil.getAvatarOrDefault(event.user))
                 .setFooter(event.jda.selfUser.name, DiscordUtil.getAvatarOrDefault(event.jda.selfUser))
                 .build()
-            event.replyEmbeds(embed).setEphemeral(true).await()
+            event.hook.sendMessageEmbeds(embed).setEphemeral(true).await()
         }
     }
 
     suspend fun onSlashNotifyList(event: GuildSlashEvent) {
+        event.interaction.deferReply(true).await()
         val twitchNotifications = TwitchNotifyBot.mongoClient.getDatabase("twitch_notify")
             .getCollection<TwitchNotifyEntry>("twitch_notify_entries")
             .find(eq("guildId", event.guild.id))
@@ -289,7 +298,7 @@ object NotifyCommand : GlobalApplicationCommandProvider {
         }
 
         val messageContent = pages[0].content as MessageEmbed
-        event.channel.sendMessageEmbeds(messageContent).queue { success ->
+        event.hook.sendMessageEmbeds(messageContent).setEphemeral(true).queue { success ->
             Pages.paginate(success, pages, true)
         }
     }

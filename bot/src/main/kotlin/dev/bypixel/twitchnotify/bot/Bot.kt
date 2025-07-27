@@ -31,12 +31,9 @@ class Bot(private val config: Config) : JDAService() {
 
     override fun createJDA(event: BReadyEvent, eventManager: IEventManager) {
         TwitchNotifyBot.shardManager = defaultSharded(config.token) {
-
-            setStatus(OnlineStatus.ONLINE)
             setStatus(OnlineStatus.ONLINE)
             setMemberCachePolicy(MemberCachePolicy.ALL)
             setChunkingFilter(ChunkingFilter.ALL)
-            enableCache(CacheFlag.ONLINE_STATUS)
             setShardsTotal(shardTotal)
             setShards(shardStart, shardEnd)
         }
