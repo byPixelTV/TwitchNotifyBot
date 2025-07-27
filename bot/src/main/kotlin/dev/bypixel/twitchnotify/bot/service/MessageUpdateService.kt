@@ -17,7 +17,7 @@ object MessageUpdateService {
     private val job = CoroutineScope(Dispatchers.IO).launch {
         while (isActive) {
             updateMessages()
-            delay(Duration.parse("10s"))
+            delay(Duration.parse("5m"))
         }
     }
 

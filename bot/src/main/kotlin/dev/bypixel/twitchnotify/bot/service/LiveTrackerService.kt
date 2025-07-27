@@ -19,7 +19,7 @@ object LiveTrackerService {
     private val job = CoroutineScope(Dispatchers.IO).launch {
         while (isActive) {
             trackNewLiveStreams()
-            delay(Duration.parse("10s"))
+            delay(Duration.parse("1m"))
         }
     }
 
