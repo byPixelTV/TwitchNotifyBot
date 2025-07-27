@@ -2,6 +2,7 @@ package dev.bypixel.twitchnotify.bot.service
 
 import com.mongodb.client.model.Filters.and
 import com.mongodb.client.model.Filters.eq
+import com.mongodb.client.model.ReplaceOptions
 import dev.bypixel.twitchnotify.bot.TwitchNotifyBot
 import dev.bypixel.twitchnotify.bot.module.notify.Template
 import dev.bypixel.twitchnotify.bot.util.TwitchUtil
@@ -46,7 +47,58 @@ object MessageUpdateService {
                             if (streams != null && streams.streams.isNotEmpty()) {
                                 val stream = streams.streams.first()
                                 val embed = Template.getStreamEmbed(stream, user, Instant.now())
-                                message.editMessageEmbeds(embed).await()
+
+                                try {
+                                    message.editMessageEmbeds(embed).await()
+                                } catch (_: Exception) {
+                                    val mainCollectionEntry = mainCollection.firstOrNull { it.notifyId == entry.linkedNotifyId }
+                                    if (mainCollectionEntry != null) {
+                                        val channel = TwitchNotifyBot.shardManager.getTextChannelById(entry.channelId)
+                                        if (channel != null) {
+                                            val pingRoleId = mainCollectionEntry.mentionRole
+                                            val mention = if (pingRoleId != null) {
+                                                channel.guild.getRoleById(pingRoleId)
+                                            } else {
+                                                null
+                                            }
+                                            if (mention == null) {
+                                                val newMessage = channel.sendMessageEmbeds(embed).await()
+                                                TwitchNotifyBot.mongoClient.getDatabase("twitch_notify")
+                                                    .getCollection<LiveNotifyEntry>("twitch_notify_live_entries")
+                                                    .replaceOne(
+                                                        eq("messageId", entry.messageId),
+                                                        LiveNotifyEntry(
+                                                            newMessage.id,
+                                                            entry.guildId,
+                                                            entry.channelId,
+                                                            entry.twitchChannelId,
+                                                            entry.streamId,
+                                                            entry.startTime,
+                                                            entry.linkedNotifyId
+                                                        ),
+                                                        ReplaceOptions().upsert(false)
+                                                    )
+                                            } else {
+                                                val newMessage = channel.sendMessage(mention.asMention).setEmbeds(embed).await()
+                                                TwitchNotifyBot.mongoClient.getDatabase("twitch_notify")
+                                                    .getCollection<LiveNotifyEntry>("twitch_notify_live_entries")
+                                                    .replaceOne(
+                                                        eq("messageId", entry.messageId),
+                                                        LiveNotifyEntry(
+                                                            newMessage.id,
+                                                            entry.guildId,
+                                                            entry.channelId,
+                                                            entry.twitchChannelId,
+                                                            entry.streamId,
+                                                            entry.startTime,
+                                                            entry.linkedNotifyId
+                                                        ),
+                                                        ReplaceOptions().upsert(false)
+                                                    )
+                                            }
+                                        }
+                                    }
+                                }
                             } else {
                                 message.delete().await()
                                 TwitchNotifyBot.mongoClient.getDatabase("twitch_notify")
