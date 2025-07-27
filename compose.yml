@@ -1,0 +1,12 @@
+services:
+  bot:
+    image: twitchnotifybot:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app
+    environment:
+      - DOTENV_CONFIG_PATH=/app/.env
+    volumes:
+      - ./.env:/app/.env
+    command: ["java", "-jar", "build/libs/bot.jar"]

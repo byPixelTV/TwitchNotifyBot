@@ -1,5 +1,4 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import java.io.ByteArrayOutputStream
 
 plugins {
     kotlin("jvm") version libs.versions.kotlin.get()
@@ -7,23 +6,8 @@ plugins {
 }
 
 group = "dev.bypixel"
-version = getGitVersion()
-rootProject.version = getGitVersion()
-
-fun getGitVersion(): String {
-    val commit = try {
-        val output = ByteArrayOutputStream()
-        Runtime.getRuntime().exec(arrayOf("git", "rev-parse", "--short", "HEAD")).apply {
-            waitFor()
-            inputStream.copyTo(output)
-        }
-        output.toString().trim()
-    } catch (_: Exception) {
-        "unknown"
-    }
-
-    return "1.0.0+$commit"
-}
+version = "0.0.1"
+rootProject.version = version
 
 tasks.named("build") {
     enabled = false
@@ -36,7 +20,7 @@ tasks.named("shadowJar") {
 repositories {
     mavenCentral()
     mavenLocal()
-    
+
     
     maven("https://central.sonatype.com/repository/maven-snapshots/")
     maven("https://oss.sonatype.org/content/repositories/snapshots")
@@ -47,7 +31,7 @@ allprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "com.gradleup.shadow")
 
-    version = getGitVersion()
+    version = version
     group = "dev.bypixel"
 
     repositories {
@@ -78,19 +62,15 @@ allprojects {
 
 subprojects {
     tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
-        val sanitizedVersion = project.version.toString().replace("/", "-")
         archiveBaseName.set(project.name)
-        archiveVersion.set(sanitizedVersion)
-        archiveFileName.set("${project.name}${sanitizedVersion}.jar")
+        archiveFileName.set("${project.name}.jar")
 
         destinationDirectory.set(file("${rootProject.layout.buildDirectory.get()}/libs"))
     }
 
     tasks.withType<Jar> {
-        val sanitizedVersion = project.version.toString().replace("/", "-")
         archiveBaseName.set(project.name)
-        archiveVersion.set(sanitizedVersion)
-        archiveFileName.set("${project.name}-${sanitizedVersion}.jar")
+        archiveFileName.set("${project.name}.jar")
     }
 }
 
