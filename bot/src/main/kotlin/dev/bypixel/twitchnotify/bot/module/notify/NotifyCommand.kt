@@ -19,8 +19,10 @@ import io.github.freya022.botcommands.api.commands.annotations.Command
 import io.github.freya022.botcommands.api.commands.application.provider.GlobalApplicationCommandManager
 import io.github.freya022.botcommands.api.commands.application.provider.GlobalApplicationCommandProvider
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
+import io.github.freya022.botcommands.api.core.utils.enumSetOf
 import kotlinx.coroutines.flow.toList
 import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.MessageEmbed
 import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildMessageChannel
@@ -306,8 +308,10 @@ object NotifyCommand : GlobalApplicationCommandProvider {
     override fun declareGlobalApplicationCommands(manager: GlobalApplicationCommandManager) {
         manager.slashCommand("notify", null) {
             description = "Manage Twitch notifications"
+            userPermissions = enumSetOf(Permission.ADMINISTRATOR)
             subcommand("add", ::onSlashNotifyAdd) {
                 description = "Add a Twitch channel where you want to get notified about streams"
+                userPermissions = enumSetOf(Permission.ADMINISTRATOR)
                 option("channelName", "channel_name") {
                     description = "The Twitch channel to add"
                 }
@@ -323,6 +327,7 @@ object NotifyCommand : GlobalApplicationCommandProvider {
             }
             subcommand("remove", ::onSlashNotifyRemove) {
                 description = "Remove a Twitch channel from the notification list"
+                userPermissions = enumSetOf(Permission.ADMINISTRATOR)
                 option("twitchUserName", "channel_name") {
                     description = "The Twitch channel to remove from the notification list"
                     autocompleteByFunction(NotifyCommandAutocomplete::onNotificationAutocomplete)
@@ -333,6 +338,7 @@ object NotifyCommand : GlobalApplicationCommandProvider {
             }
             subcommand("list", ::onSlashNotifyList) {
                 description = "List all Twitch channels that are currently in the notification list on this server"
+                userPermissions = enumSetOf(Permission.ADMINISTRATOR)
             }
         }
     }
