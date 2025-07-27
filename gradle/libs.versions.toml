@@ -1,0 +1,45 @@
+[versions]
+json = "20250517"
+discordwebhook = "0.8.4"
+jedis = "6.0.0"
+shadow = "9.0.0-rc2"
+kotlin = "2.2.0"
+apacheCommonsText = "1.13.1"
+kotlinReflect = "2.2.0"
+mongodb = "5.5.1"
+okhttp = "5.1.0"
+dotenv = "6.5.1"
+kotlinx-serialization = "1.9.0"
+kotlinx-datetime = "0.7.1"
+kotlinx-coroutines = "1.10.2"
+bot-commands = "3.0.0-beta.3"
+slf4j = "2.1.0-alpha1"
+jda = "5.6.1"
+logback = "1.5.18"
+twitch4j = "1.25.0"
+okio = "3.15.0"
+stacktrace-decoroutinator = "2.5.5"
+pagination = "4.1.4b"
+
+[libraries]
+json = { group = "org.json", name = "json", version.ref = "json" }
+discord-webhook = { group = "club.minnced", name = "discord-webhooks", version.ref = "discordwebhook" }
+coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+coroutines-reactive = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-reactive", version.ref = "kotlinx-coroutines" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
+apache-commons-text = { group = "org.apache.commons", name = "commons-text", version.ref = "apacheCommonsText" }
+kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlinReflect" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+mongodb-driver-coroutine = { group = "org.mongodb", name = "mongodb-driver-kotlin-coroutine", version.ref = "mongodb" }
+mongodb-bson-kotlinx = { group = "org.mongodb", name = "bson-kotlinx", version.ref = "mongodb" }
+bot-commands = { group = "io.github.freya022", name = "BotCommands", version.ref = "bot-commands" }
+jedis = { group = "redis.clients", name = "jedis", version.ref = "jedis" }
+slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
+logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
+jda = { group = "net.dv8tion", name = "JDA", version.ref = "jda" }
+dotenv = { group = "io.github.cdimascio", name = "dotenv-kotlin", version.ref = "dotenv" }
+twitch4j = { group = "com.github.twitch4j", name = "twitch4j", version.ref = "twitch4j" }
+okio = { group = "com.squareup.okio", name = "okio", version.ref = "okio" }
+stacktrace-decoroutinator = { group = "dev.reformator.stacktracedecoroutinator", name = "stacktrace-decoroutinator-jvm", version.ref = "stacktrace-decoroutinator" }
+pagination = { group = "com.github.ygimenez", name = "Pagination-Utils", version.ref = "pagination" }
