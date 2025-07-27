@@ -21,7 +21,7 @@ object MessageUpdateService {
     private val job = CoroutineScope(Dispatchers.IO).launch {
         while (isActive) {
             updateMessages()
-            delay(Duration.parse("5m"))
+            delay(Duration.parse("1m"))
         }
     }
 
@@ -38,7 +38,6 @@ object MessageUpdateService {
         for (entry in currentStreamMessages) {
             val channel = TwitchNotifyBot.shardManager.getTextChannelById(entry.channelId)
             if (channel != null) {
-                val message = channel.retrieveMessageById(entry.messageId).await()
                 val userId = entry.twitchChannelId
                 val user = TwitchUtil.getUserById(userId)?.users?.firstOrNull()
                 if (user != null) {
@@ -49,14 +48,13 @@ object MessageUpdateService {
 
                     val isUserLive = TwitchUtil.isUserLive(user)
                     if (isUserLive) {
-                        println("User ${user.displayName} is live, updating message with stream info.")
                         val streams = TwitchUtil.getStreamsOfUser(user)
                         if (streams != null && streams.streams.isNotEmpty()) {
                             val stream = streams.streams.first()
                             val embed = Template.getStreamEmbed(stream, user, Instant.now())
 
                             try {
-                                message.editMessageEmbeds(embed).await()
+                                channel.retrieveMessageById(entry.messageId).await().editMessageEmbeds(embed).await()
                             } catch (_: Exception) {
                                 val mainCollectionEntry = mainCollection.firstOrNull { it.notifyId == entry.linkedNotifyId }
                                 if (mainCollectionEntry != null) {
@@ -82,7 +80,11 @@ object MessageUpdateService {
                                 }
                             }
                         } else {
-                            message.delete().await()
+                            try {
+                                channel.retrieveMessageById(entry.messageId).await().delete().await()
+                            } catch (e: Exception) {
+                                logger.error("❌ Failed to delete message with ID ${entry.messageId} in channel ${entry.channelId}: ${e.message}")
+                            }
                             TwitchNotifyBot.mongoClient.getDatabase("twitch_notify")
                                 .getCollection<LiveNotifyEntry>("twitch_notify_live_entries")
                                 .deleteOne(eq("messageId", entry.messageId))
@@ -91,13 +93,21 @@ object MessageUpdateService {
                         println("User ${user.displayName} is not live, updating message to offline state or deleting it.")
                         mainCollection.forEach { mainEntry ->
                             if (mainEntry.deleteMsgWhenStreamEnded) {
-                                message.delete().await()
+                                try {
+                                    channel.retrieveMessageById(entry.messageId).await().delete().await()
+                                } catch (e: Exception) {
+                                    logger.error("❌ Failed to delete message with ID ${entry.messageId} in channel ${entry.channelId}: ${e.message}")
+                                }
                                 TwitchNotifyBot.mongoClient.getDatabase("twitch_notify")
                                     .getCollection<LiveNotifyEntry>("twitch_notify_live_entries")
                                     .deleteOne(eq("messageId", entry.messageId))
                             } else {
                                 val embed = Template.getOfflineEmbed(user, entry.startTime)
-                                message.editMessageEmbeds(embed).await()
+                                try {
+                                    channel.retrieveMessageById(entry.messageId).await().editMessageEmbeds(embed).await()
+                                } catch (_: Exception) {
+                                    channel.sendMessageEmbeds(embed).await()
+                                }
                                 TwitchNotifyBot.mongoClient.getDatabase("twitch_notify")
                                     .getCollection<LiveNotifyEntry>("twitch_notify_live_entries")
                                     .deleteOne(eq("messageId", entry.messageId))
@@ -105,7 +115,11 @@ object MessageUpdateService {
                         }
                     }
                 } else {
-                    message.delete().await()
+                    try {
+                        channel.retrieveMessageById(entry.messageId).await().delete().await()
+                    } catch (e: Exception) {
+                        logger.error("❌ Failed to delete message with ID ${entry.messageId} in channel ${entry.channelId}: ${e.message}")
+                    }
                     TwitchNotifyBot.mongoClient.getDatabase("twitch_notify")
                         .getCollection<LiveNotifyEntry>("twitch_notify_live_entries")
                         .deleteOne(eq("messageId", entry.messageId))
